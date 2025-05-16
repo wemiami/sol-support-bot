@@ -37,7 +37,7 @@ app.message(async ({ message, say }) => {
     };
 
     try {
-      // Save ticket to Drive via Google Apps Script webhook
+      // ✅ Save ticket to Drive
       await axios.post('https://script.google.com/macros/s/AKfycbwKlvjSioT753iSqy7TI0zd3Tc4KiefbhPxudRAa6Xgl88whFmtUU3dqyD1Nntz680g/exec', {
         issueDetails: parsed.issue,
         cabinName: parsed.cabin,
@@ -46,23 +46,24 @@ app.message(async ({ message, say }) => {
 
       await say(`📝 Got it. I’ve saved this issue under *${parsed.cabin}* and will check SOPs now...`);
 
-      // Search synced SOPs for a match
+      // ✅ SOP Search
       try {
         const sopResponse = await axios.get('https://sol-support-bot-paf9.onrender.com/sync-sops');
         const sopFiles = sopResponse.data || {};
+        console.log("🗂️ Loaded SOP files:", Object.keys(sopFiles));
 
-        console.log("🗂️ Loaded SOP files:", Object.keys(sopFiles));  // Add this debug log
-        
         let matchedFile = null;
         let matchText = '';
 
-        // Normalize quotes and case
         const normalize = str => str.toLowerCase().replace(/[\u2018\u2019\u201C\u201D]/g, "'");
 
-        const keywords = normalize(parsed.issue).split(/\s+/); // split into words
+        const keywords = normalize(parsed.issue).split(/\s+/);
 
         for (const [filename, content] of Object.entries(sopFiles)) {
           const normalizedContent = normalize(content);
+          console.log(`🔍 Checking '${filename}' for any of these keywords:`, keywords);
+          console.log("📄 Preview of file content:", normalizedContent.substring(0, 100));
+
           const matchFound = keywords.some(word => normalizedContent.includes(word));
           if (matchFound) {
             matchedFile = filename;
