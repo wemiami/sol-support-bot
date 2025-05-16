@@ -51,6 +51,8 @@ app.message(async ({ message, say }) => {
         const sopResponse = await axios.get('https://sol-support-bot-paf9.onrender.com/sync-sops');
         const sopFiles = sopResponse.data || {};
 
+        console.log("🗂️ Loaded SOP files:", Object.keys(sopFiles));  // Add this debug log
+        
         let matchedFile = null;
         let matchText = '';
 
