@@ -1,5 +1,3 @@
-// index.js
-
 const { App } = require('@slack/bolt');
 require('dotenv').config();
 const axios = require('axios');
@@ -18,14 +16,12 @@ app.message(async ({ message, say }) => {
   const userId = message.user;
   const text = message.text.trim();
 
-  // If we haven't started collecting info yet
   if (!openTickets[userId]) {
     openTickets[userId] = { step: 'awaiting_details' };
     await say(`Hi there <@${userId}>! 👋 Please paste the guest's message and tell me which cabin this is for.`);
     return;
   }
 
-  // If awaiting guest message and cabin
   if (openTickets[userId].step === 'awaiting_details') {
     const parsed = parseIssueInput(text);
     if (!parsed) {
@@ -40,8 +36,8 @@ app.message(async ({ message, say }) => {
       cabin: parsed.cabin
     };
 
-    // ✅ Save to Drive via your Apps Script webhook (to be added)
     try {
+      // Save ticket to Drive via Google Apps Script webhook
       await axios.post('https://script.google.com/macros/s/AKfycbwKlvjSioT753iSqy7TI0zd3Tc4KiefbhPxudRAa6Xgl88whFmtUU3dqyD1Nntz680g/exec', {
         issueDetails: parsed.issue,
         cabinName: parsed.cabin,
@@ -49,7 +45,32 @@ app.message(async ({ message, say }) => {
       });
 
       await say(`📝 Got it. I’ve saved this issue under *${parsed.cabin}* and will check SOPs now...`);
-      // ✅ Next step: search SOPs or fallback to GPT
+
+      // Search synced SOPs for a match
+      try {
+        const sopResponse = await axios.get('https://sol-support-bot-paf9.onrender.com/sync-sops');
+        const sopFiles = sopResponse.data || {};
+
+        let matchedFile = null;
+        let matchText = '';
+
+        for (const [filename, content] of Object.entries(sopFiles)) {
+          if (content.toLowerCase().includes(parsed.issue.toLowerCase())) {
+            matchedFile = filename;
+            matchText = content;
+            break;
+          }
+        }
+
+        if (matchedFile) {
+          await say(`📄 I found something in *${matchedFile}* that might help:\n\n\`\`\`${matchText.substring(0, 500)}...\`\`\``);
+        } else {
+          await say("🤔 I didn’t find anything in the SOPs for that issue. I’ll try using GPT next.");
+        }
+      } catch (searchErr) {
+        console.error('❌ SOP search failed:', searchErr);
+        await say("⚠️ I had trouble checking the SOPs. Let Jake know.");
+      }
 
     } catch (err) {
       await say("⚠️ I ran into an issue trying to log this. Please let Jake know.");
@@ -60,7 +81,6 @@ app.message(async ({ message, say }) => {
   }
 });
 
-// Simple parser for structured input
 function parseIssueInput(text) {
   const cabinMatch = text.match(/Cabin:\s*(.+)/i);
   const issueMatch = text.match(/Issue:\s*(.+)/i);
