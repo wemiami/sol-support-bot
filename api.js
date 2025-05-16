@@ -2,7 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 
 const webApp = express();
-webApp.use(bodyParser.json());
+webApp.use(bodyParser.json({ limit: '10mb' }));
 
 let sopFiles = {}; // In-memory SOP storage
 
