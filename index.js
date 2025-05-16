@@ -55,7 +55,9 @@ app.message(async ({ message, say }) => {
         let matchText = '';
 
         for (const [filename, content] of Object.entries(sopFiles)) {
-          if (content.toLowerCase().includes(parsed.issue.toLowerCase())) {
+        const keywords = parsed.issue.toLowerCase().split(' ');
+        const matchFound = keywords.some(word => content.toLowerCase().includes(word));
+        if (matchFound) {
             matchedFile = filename;
             matchText = content;
             break;
