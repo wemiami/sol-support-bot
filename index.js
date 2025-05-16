@@ -54,10 +54,15 @@ app.message(async ({ message, say }) => {
         let matchedFile = null;
         let matchText = '';
 
+        // Normalize quotes and case
+        const normalize = str => str.toLowerCase().replace(/[\u2018\u2019\u201C\u201D]/g, "'");
+
+        const keywords = normalize(parsed.issue).split(/\s+/); // split into words
+
         for (const [filename, content] of Object.entries(sopFiles)) {
-        const keywords = parsed.issue.toLowerCase().split(' ');
-        const matchFound = keywords.some(word => content.toLowerCase().includes(word));
-        if (matchFound) {
+          const normalizedContent = normalize(content);
+          const matchFound = keywords.some(word => normalizedContent.includes(word));
+          if (matchFound) {
             matchedFile = filename;
             matchText = content;
             break;
