@@ -22,6 +22,10 @@ webApp.post('/sync-sops', (req, res) => {
   res.json({ message: 'SOPs synced successfully' });
 });
 
+webApp.get('/sync-sops', (req, res) => {
+  res.json(sopFiles); // returns all stored SOPs
+});
+
 webApp.listen(process.env.PORT || 3000, () => {
   console.log('✅ Web API server is running...');
 });
