@@ -30,10 +30,26 @@ function loadSOPFiles() {
   console.log(`📁 Loaded ${files.length} SOP files:`, Object.keys(sopFiles));
 }
 
+// 🔹 Normalize text for better matching
+function normalize(str) {
+  return str
+    .toLowerCase()
+    .replace(/[\u2018\u2019\u201C\u201D]/g, "'") // curly quotes
+    .replace(/[–—]/g, '-')                     // en/em dashes
+    .replace(/[^\w\s]/g, '');                  // remove punctuation
+}
+
 // 🔹 Slack Message Handler
 app.message(async ({ message, say }) => {
   const userId = message.user;
   const text = message.text.trim();
+
+  // Reset flow on "Hi Sol", "Hello", etc.
+  if (/^hi|hello|hey|sol/i.test(text)) {
+    openTickets[userId] = { step: 'awaiting_details' };
+    await say(`Hi there <@${userId}>! 👋 Please paste the guest's message and tell me which cabin this is for.`);
+    return;
+  }
 
   if (!openTickets[userId]) {
     openTickets[userId] = { step: 'awaiting_details' };
@@ -64,31 +80,32 @@ app.message(async ({ message, say }) => {
 
       await say(`📝 Got it. I’ve saved this issue under *${parsed.cabin}* and will check SOPs now...`);
 
+      // Match issue keywords to SOP files
       let matchedFile = null;
       let matchText = '';
-
-      const normalize = str =>
-        str
-          .toLowerCase()
-          .replace(/[\u2018\u2019\u201C\u201D]/g, "'")
-          .replace(/[–—]/g, '-')
-          .replace(/[^\w\s]/g, '');
-
       const keywords = normalize(parsed.issue).split(/\s+/);
-      console.log('🔍 Keywords:', keywords);
+      const targetCabin = normalize(parsed.cabin);
 
       for (const [filename, content] of Object.entries(sopFiles)) {
         const normalizedContent = normalize(content);
-        const matchFound = keywords.some(word => normalizedContent.includes(word));
-        if (matchFound) {
+        const hasKeyword = keywords.some(word => normalizedContent.includes(word));
+        const mentionsCabin = normalizedContent.includes(targetCabin);
+
+        if (hasKeyword && mentionsCabin) {
           matchedFile = filename;
-          matchText = content;
+
+          // Extract relevant section for the cabin only
+          const regex = new RegExp(`(?<=Task:\\s*${parsed.cabin})([\\s\\S]*?)(?=Task:|$)`, 'i');
+          const match = content.match(regex);
+          matchText = match ? match[0].trim() : content;
+
           break;
         }
       }
 
       if (matchedFile) {
-        await say(`📄 I found something in *${matchedFile}* that might help:\n\n\`\`\`${matchText.substring(0, 500)}...\`\`\``);
+        await say(`📄 From *${matchedFile}*, here's the info I found for *${parsed.cabin}*:\n\n\`\`\`${matchText.substring(0, 500)}...\`\`\``);
+        await say(`💬 Suggested reply to guest: "The WiFi password for ${parsed.cabin} is listed here: ${matchText.match(/wifi_password\d*:\s*([^\s]+)/i)?.[1] || '[not found]'}."`);
       } else {
         await say("🤔 I didn’t find anything in the SOPs for that issue. I’ll try using GPT next.");
       }
@@ -118,7 +135,7 @@ function parseIssueInput(text) {
 
 // 🔹 Start Sol
 (async () => {
-  loadSOPFiles(); // Load SOPs from disk first
+  loadSOPFiles();
   await app.start();
   console.log('⚡ Sol is up and running!');
 })();
