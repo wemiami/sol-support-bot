@@ -154,6 +154,3 @@ function parseIssueInput(text) {
   await app.start();
   console.log('⚡ Sol is up and running!');
 })();
-
-  console.log('⚡ Sol is up and running!');
-})();
