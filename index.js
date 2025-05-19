@@ -114,8 +114,8 @@ app.message(async ({ message, say }) => {
       if (matchedFile) {
         const formatted = matchedLines
           .map(line => {
-            if (line.toLowerCase().includes('wifi_network_name')) return `**WiFi Network**: ${line.split(':')[1].trim()}`;
-            if (line.toLowerCase().includes('wifi_password')) return `**Password**: ${line.split(':')[1].trim()}`;
+            if (line.toLowerCase().includes('wifi_network_name')) return `*WiFi Network*: ${line.split(':')[1].trim()}`;
+            if (line.toLowerCase().includes('wifi_password')) return `*Password*: ${line.split(':')[1].trim()}`;
             return `_${line.trim()}_`;
           })
           .join('\n');
