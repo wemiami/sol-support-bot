@@ -1,7 +1,10 @@
 const { App } = require('@slack/bolt');
 require('dotenv').config();
 const axios = require('axios');
+const express = require('express');
+const bodyParser = require('body-parser');
 
+// 🔹 Slack App Setup
 const app = new App({
   token: process.env.SLACK_BOT_TOKEN,
   signingSecret: process.env.SLACK_SIGNING_SECRET,
@@ -9,9 +12,13 @@ const app = new App({
   appToken: process.env.SLACK_APP_TOKEN
 });
 
-// Track active conversations for structured input
+// 🔹 Track open conversations
 const openTickets = {};
 
+// 🔹 In-memory SOP file store
+let sopFiles = {};
+
+// 🔹 Slack Message Handler
 app.message(async ({ message, say }) => {
   const userId = message.user;
   const text = message.text.trim();
@@ -37,7 +44,6 @@ app.message(async ({ message, say }) => {
     };
 
     try {
-      // ✅ Save ticket to Drive
       await axios.post('https://script.google.com/macros/s/AKfycbwKlvjSioT753iSqy7TI0zd3Tc4KiefbhPxudRAa6Xgl88whFmtUU3dqyD1Nntz680g/exec', {
         issueDetails: parsed.issue,
         cabinName: parsed.cabin,
@@ -46,51 +52,40 @@ app.message(async ({ message, say }) => {
 
       await say(`📝 Got it. I’ve saved this issue under *${parsed.cabin}* and will check SOPs now...`);
 
-      // ✅ SOP Search
-      try {
-        const sopResponse = await axios.get('https://sol-support-bot-paf9.onrender.com/sync-sops');
-        const sopFiles = sopResponse.data || {};
-        console.log("🗂️ Loaded SOP files:", Object.keys(sopFiles));
+      // SOP Search
+      console.log("🗂️ Loaded SOP files:", Object.keys(sopFiles));
+      let matchedFile = null;
+      let matchText = '';
 
-        let matchedFile = null;
-        let matchText = '';
+      const normalize = str => str.toLowerCase().replace(/[\u2018\u2019\u201C\u201D]/g, "'");
+      const keywords = normalize(parsed.issue).split(/\s+/);
 
-        const normalize = str => str.toLowerCase().replace(/[\u2018\u2019\u201C\u201D]/g, "'");
-
-        const keywords = normalize(parsed.issue).split(/\s+/);
-
-        for (const [filename, content] of Object.entries(sopFiles)) {
-          const normalizedContent = normalize(content);
-          console.log(`🔍 Checking '${filename}' for any of these keywords:`, keywords);
-          console.log("📄 Preview of file content:", normalizedContent.substring(0, 100));
-
-          const matchFound = keywords.some(word => normalizedContent.includes(word));
-          if (matchFound) {
-            matchedFile = filename;
-            matchText = content;
-            break;
-          }
+      for (const [filename, content] of Object.entries(sopFiles)) {
+        const normalizedContent = normalize(content);
+        const matchFound = keywords.some(word => normalizedContent.includes(word));
+        if (matchFound) {
+          matchedFile = filename;
+          matchText = content;
+          break;
         }
+      }
 
-        if (matchedFile) {
-          await say(`📄 I found something in *${matchedFile}* that might help:\n\n\`\`\`${matchText.substring(0, 500)}...\`\`\``);
-        } else {
-          await say("🤔 I didn’t find anything in the SOPs for that issue. I’ll try using GPT next.");
-        }
-      } catch (searchErr) {
-        console.error('❌ SOP search failed:', searchErr);
-        await say("⚠️ I had trouble checking the SOPs. Let Jake know.");
+      if (matchedFile) {
+        await say(`📄 I found something in *${matchedFile}* that might help:\n\n\`\`\`${matchText.substring(0, 500)}...\`\`\``);
+      } else {
+        await say("🤔 I didn’t find anything in the SOPs for that issue. I’ll try using GPT next.");
       }
 
     } catch (err) {
-      await say("⚠️ I ran into an issue trying to log this. Please let Jake know.");
-      console.error(err);
+      console.error('❌ Error saving or searching:', err);
+      await say("⚠️ Something went wrong. Let Jake know.");
     }
 
     return;
   }
 });
 
+// 🔹 Parse cabin + issue from message
 function parseIssueInput(text) {
   const cabinMatch = text.match(/Cabin:\s*(.+)/i);
   const issueMatch = text.match(/Issue:\s*(.+)/i);
@@ -104,7 +99,35 @@ function parseIssueInput(text) {
   return null;
 }
 
+// 🔹 Express Server for syncing SOPs
+const webApp = express();
+webApp.use(bodyParser.json({ limit: '10mb' }));
+
+webApp.post('/sync-sops', (req, res) => {
+  const files = req.body.files;
+
+  if (!files || !Array.isArray(files)) {
+    return res.status(400).json({ error: 'Invalid file data' });
+  }
+
+  sopFiles = {};
+  files.forEach(file => {
+    sopFiles[file.filename] = file.content;
+  });
+
+  console.log(`✅ Stored ${files.length} SOPs to memory`);
+  res.json({ message: 'SOPs synced successfully' });
+});
+
+webApp.get('/sync-sops', (req, res) => {
+  res.json(sopFiles);
+});
+
+// 🔹 Start everything
 (async () => {
   await app.start();
   console.log('⚡ Sol is up and running!');
+  webApp.listen(process.env.PORT || 3000, () => {
+    console.log('✅ Web API server is running...');
+  });
 })();
