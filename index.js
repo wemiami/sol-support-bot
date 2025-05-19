@@ -1,8 +1,8 @@
 const { App } = require('@slack/bolt');
 require('dotenv').config();
 const axios = require('axios');
-const express = require('express');
-const bodyParser = require('body-parser');
+const fs = require('fs');
+const path = require('path');
 
 // 🔹 Slack App Setup
 const app = new App({
@@ -14,9 +14,21 @@ const app = new App({
 
 // 🔹 Track open conversations
 const openTickets = {};
+let sopFiles = {}; // In-memory SOPs
 
-// 🔹 In-memory SOP file store
-let sopFiles = {};
+// 🔹 Load SOPs from /sops directory on startup
+function loadSOPFiles() {
+  const sopsDir = path.join(__dirname, 'sops');
+  const files = fs.readdirSync(sopsDir).filter(file => file.endsWith('.txt'));
+
+  files.forEach(file => {
+    const filePath = path.join(sopsDir, file);
+    const content = fs.readFileSync(filePath, 'utf-8');
+    sopFiles[file] = content;
+  });
+
+  console.log(`📁 Loaded ${files.length} SOP files:`, Object.keys(sopFiles));
+}
 
 // 🔹 Slack Message Handler
 app.message(async ({ message, say }) => {
@@ -52,18 +64,18 @@ app.message(async ({ message, say }) => {
 
       await say(`📝 Got it. I’ve saved this issue under *${parsed.cabin}* and will check SOPs now...`);
 
-      // SOP Search
-      console.log("🗂️ Loaded SOP files:", Object.keys(sopFiles));
       let matchedFile = null;
       let matchText = '';
 
       const normalize = str =>
-  str
-    .toLowerCase()
-    .replace(/[\u2018\u2019\u201C\u201D]/g, "'") // curly quotes → straight
-    .replace(/[–—]/g, '-')                     // en/em dashes → hyphen
-    .replace(/[^\w\s]/g, '');                  // remove punctuation
+        str
+          .toLowerCase()
+          .replace(/[\u2018\u2019\u201C\u201D]/g, "'")
+          .replace(/[–—]/g, '-')
+          .replace(/[^\w\s]/g, '');
+
       const keywords = normalize(parsed.issue).split(/\s+/);
+      console.log('🔍 Keywords:', keywords);
 
       for (const [filename, content] of Object.entries(sopFiles)) {
         const normalizedContent = normalize(content);
@@ -90,7 +102,7 @@ app.message(async ({ message, say }) => {
   }
 });
 
-// 🔹 Parse cabin + issue from message
+// 🔹 Extract cabin and issue from Slack message
 function parseIssueInput(text) {
   const cabinMatch = text.match(/Cabin:\s*(.+)/i);
   const issueMatch = text.match(/Issue:\s*(.+)/i);
@@ -104,35 +116,9 @@ function parseIssueInput(text) {
   return null;
 }
 
-// 🔹 Express Server for syncing SOPs
-const webApp = express();
-webApp.use(bodyParser.json({ limit: '10mb' }));
-
-webApp.post('/sync-sops', (req, res) => {
-  const files = req.body.files;
-
-  if (!files || !Array.isArray(files)) {
-    return res.status(400).json({ error: 'Invalid file data' });
-  }
-
-  sopFiles = {};
-  files.forEach(file => {
-    sopFiles[file.filename] = file.content;
-  });
-
-  console.log(`✅ Stored ${files.length} SOPs to memory`);
-  res.json({ message: 'SOPs synced successfully' });
-});
-
-webApp.get('/sync-sops', (req, res) => {
-  res.json(sopFiles);
-});
-
-// 🔹 Start everything
+// 🔹 Start Sol
 (async () => {
+  loadSOPFiles(); // Load SOPs from disk first
   await app.start();
   console.log('⚡ Sol is up and running!');
-  webApp.listen(process.env.PORT || 3000, () => {
-    console.log('✅ Web API server is running...');
-  });
 })();
