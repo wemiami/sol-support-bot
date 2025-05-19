@@ -1,0 +1,310 @@
+Task: A View From The Top
+wifi_network_name6: View From The Top
+wifi_password7: Smores123
+---
+
+Task: Bella Cresta
+wifi_network_name6: bellacresta-password:bellacresta
+wifi_password7: nashville or Nashville
+---
+
+Task: Bluebird Sky
+wifi_network_name6: Bluebird Sky- Guest 
+
+Other Wifi Network: 
+Bluebird Sky Cabin 
+Password: milwaukee2000
+wifi_password7: exploreBBS
+---
+
+Task: Casa Amore
+wifi_network_name6: Kestel
+wifi_password7: Kestel123
+long_text: Inside owner's closet
+long_text0: Connection by the patio is potty - advise guest to reset the Wifi router
+---
+
+Task: Caspian's Cottage
+wifi_network_name6: Caspians Cottage
+wifi_password7: Caspian138
+long_text: Owner's closet in the master bedroom. 
+Code is 3358
+---
+
+Task: Chasing the Light
+wifi_network_name6: Chasing The Light
+wifi_password7: 12345678
+---
+
+Task: Chicken And Waffles Cabin
+wifi_network_name6: chickenandwaffles
+wifi_password7: morewaffles
+---
+
+Task: Cozy White Cabin
+wifi_network_name6: cozywhite
+wifi_password7: cozywhite
+---
+
+Task: Cross My Heart
+wifi_network_name6: CrossMyHeart Guest
+wifi_password7: 416LostCreek
+---
+
+Task: Dapper Deer
+wifi_network_name6: The Dapper Deer Guest
+wifi_password7: BBHTDD2022
+---
+
+Task: Double A's Hideout
+wifi_network_name6: Double A Hideout
+wifi_password7: aahideout
+---
+
+Task: Enchanted Creeks
+wifi_network_name6: Enchanted Creeks
+wifi_password7: enchanted01
+---
+
+Task: Endless Views
+wifi_network_name6: Endless Views
+wifi_password7: views226
+---
+
+Task: Hart to Hart Cabin
+wifi_network_name6: Three Pines
+wifi_password7: BBLC@2016
+---
+
+Task: Holy Guacamole!
+wifi_network_name6: Holy Guacamole
+wifi_password7: bookagainsave10%
+hot_spot: No, but Mel said the wi-fi is good at the cabin
+---
+
+Task: Let's Get Toasted
+wifi_network_name6: Lets get toasted
+wifi_password7: Smores123
+---
+
+Task: Majestic Pines
+wifi_network_name6: Pine Fiber 5G
+wifi_password7: SweetRoot46
+long_text0: If the guest complains about WIFI issue. Plug back the mesh router they unplugged from the bedroom.
+---
+
+Task: Mockingbird Hill
+wifi_network_name6: MockingbirdHill
+wifi_password7: Harper 1960
+---
+
+Task: Moonlight Magnolia
+wifi_network_name6: Moonlight magnolia
+wifi_password7: moonlight100
+---
+
+Task: Oh Deer!
+wifi_network_name6: Oh Deer
+wifi_password7: welcomeguest
+---
+
+Task: Okie-A
+wifi_network_name6: The Okie A
+wifi_password7: Smores123
+long_text: The router is in the closet behind the fireplace. Code is 1801 (new code 1911). Then, pull the door open from the bottom of the door.
+long_text0: The internet company suggests unplugging the router for 20 seconds. Don't push reset button or anything. Just unplug for 20 seconds and then plug it back in.
+
+The router is in the closet behind the fireplace. Code is 1801. Then, pull the door open from the bottom of the door.
+
+After 1 minute, internet should be restored. If not, they will send a tech out so please let us know.
+---
+
+Task: Peaceful Easy Feeling
+wifi_network_name6: pefcabin
+wifi_password7: pefcabin175
+---
+
+Task: Pickleberry Lodge
+wifi_network_name6: Pickleberry Lodge
+wifi_password7: PickleTime1*
+---
+
+Task: Rock Creek
+wifi_network_name6: Rock Creek
+wifi_password7: destiny24
+---
+
+Task: Sleepy Moose
+wifi_network_name6: Sleepy Moose
+wifi_password7: 1SleepyMoose
+---
+
+Task: Stella Vista
+wifi_network_name6: stellavista1
+wifi_password7: stellavista1
+---
+
+Task: The Revel
+wifi_network_name6: Wi-Fi Network Name: THEREVELCABIN
+Alternative wifi - therevelcabin.com
+password (both) - 1Hochatown
+
+OLD Wi-Fi Info
+Therevelcabin.com OR therevelcabin.com_ext
+long_text: The router is in the half bath on the ledge. They need a step stool and it is in the laundry room.
+The wifi Extender will be installed Jan. 08
+text1: Wifi Extender Installation video:
+---
+
+Task: The Timberline
+wifi_network_name6: thetimberline
+wifi_password7: timberline8
+---
+
+Task: Toasted Pines
+wifi_network_name6: Toasted Pines
+wifi_password7: ToastedPines235
+long_text: Owner closet (at the front door when you walk into the cabin- to the left) Closet key(undeneed  of the kitchen sink – to the right ) hanging at the top)
+---
+
+Task: Whiskey Sunrise
+wifi_network_name6: SouthernComfortRetreats
+wifi_password7: whiskeysunrise
+---
+
+Task: Hoot & Holler
+wifi_network_name6: Hoot and Holler Guest
+wifi_password7: HootGuest
+---
+
+Task: Huckleberry Finn
+wifi_network_name6: hfcabin
+wifi_password7: huckfinn17
+---
+
+Task: Happy Go Lucky
+wifi_network_name6: Happy Go Lucky
+wifi_password7: Happy!!!
+---
+
+Task: Luck of the Irish
+wifi_network_name6: Luck of the Irish
+wifi_password7: Lucky!!!
+long_text: WIFI ROUTER  - Inside downstairs owner closet
+---
+
+Task: Dream On
+wifi_network_name6: Dream On
+wifi_password7: cabin2024
+---
+
+Task: Bearly Behaving
+wifi_network_name6: Bearly Behavin
+wifi_password7: bear2023
+---
+
+Task: Ananda Hideaway / Farmhouse
+wifi_network_name6: Hough
+wifi_password7: hough7014
+---
+
+Task: Pickleball Court/Gameroom
+wifi_network_name6: AnandaGameroom
+wifi_password7: Jordan04
+---
+
+Task: Florida Palmetto Airstream
+wifi_network_name6: Wi-fi network : Ananda Airstream
+Password : Jordan2004
+Gameroom: Ananda Gameroom
+Password: Jordan2001
+Game room door code: 0103#
+wifi_password7: Jordan2004
+---
+
+Task: Indiana Tulip Airstream
+wifi_network_name6: Wi-fi network : Ananda Airstream
+Password : Jordan2004
+Gameroom: Ananda Gameroom
+Password: Jordan2001
+Game room door code: 0103#
+wifi_password7: Jordan2004
+---
+
+Task: Iowa Bur Oak Airstream
+wifi_network_name6: Wi-fi network : Ananda Airstream
+Password : Jordan2004
+Gameroom: Ananda Gameroom
+Password: Jordan2001
+Game room door code: 0103#
+wifi_password7: Jordan2004
+---
+
+Task: Pennsylvania Eastern Hemlock Airstream
+wifi_network_name6: Wi-fi network : Ananda Airstream
+Password : Jordan2004
+Gameroom: Ananda Gameroom
+Password: Jordan2001
+Game room door code: 0103#
+wifi_password7: Jordan2004
+---
+
+Task: Texas Pecan Airstream
+wifi_network_name6: Wi-fi network : Ananda Airstream
+Password : Jordan2004
+Gameroom: Ananda Gameroom
+Password: Jordan2001
+Game room door code: 0103#
+wifi_password7: Jordan2004
+---
+
+Task: Wisconsin Sugar Maple Airstream
+wifi_network_name6: Wi-fi network : Ananda Airstream
+Password : Jordan2004
+Gameroom: Ananda Gameroom
+Password: Jordan2001
+Game room door code: 0103#
+wifi_password7: Jordan2004
+---
+
+Task: The Evergreen Hideaway
+wifi_network_name6: 763Evergreenvista
+wifi_password7: !Hochatown24
+---
+
+Task: Cottonwood Cottage
+wifi_network_name6: Cottonwood
+wifi_password7: Hochatown2021
+long_text: Owner's closet (locked closed in the hallway) - code: 2802
+---
+
+Task: Salt and Light Cabin
+wifi_network_name6: Wanderlust
+wifi_password7: wanderlust
+---
+
+Task: All Your Promies
+---
+
+Task: Afternoon Delight
+wifi_network_name6: Afternoon Delight
+wifi_password7: afternoondelight
+---
+
+Task: Here Comes the Sun
+wifi_network_name6: Shangri Lodge
+wifi_password7: Warrior81
+---
+
+Task: For Internet Issues- Reach out to the owner
+---
+
+Task: Ask the owner: Would you like the guest to have access to your router?
+---
+
+Task: Wifi is asking for the router's 8-digit code
+long_text0: Inform the guest: You have an option to select a secondary way of login. Pls select that option. How to Connect Manually:
+Go to your device’s Wi-Fi settings.
+Select our network name (SSID).
+When prompted, enter the Wi-Fi password we provided manually (not the 8-digit PIN).
+---
