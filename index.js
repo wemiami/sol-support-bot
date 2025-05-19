@@ -67,8 +67,8 @@ app.message(async ({ message, say }) => {
       const normalize = str =>
         str
           .toLowerCase()
-          .replace(/[\u2018\u2019\u201C\u201D]/g, "'")
-          .replace(/[\u2013\u2014]/g, '-')
+          .replace(/[‘’“”]/g, "'")
+          .replace(/[–—]/g, '-')
           .replace(/[^\w\s]/g, '');
 
       const keywords = normalize(parsed.issue).split(/\s+/);
@@ -78,6 +78,10 @@ app.message(async ({ message, say }) => {
       let matchedLines = [];
 
       for (const [filename, content] of Object.entries(sopFiles)) {
+        const normalizedContent = normalize(content);
+        const keywordMatch = keywords.some(word => normalizedContent.includes(word));
+        if (!keywordMatch) continue;
+
         const lines = content.split(/\r?\n/);
         let relevant = false;
         let collecting = false;
@@ -117,10 +121,12 @@ app.message(async ({ message, say }) => {
           .join('\n');
 
         const passwordLine = matchedLines.find(l => l.toLowerCase().includes('wifi_password'));
-        const cleanPwd = passwordLine ? passwordLine.split(':')[1].trim() : '(not found)';
+        const cleanPwd = passwordLine ? passwordLine.split(':')[1].trim() : null;
 
         await say(`📄 From *${matchedFile}*, here's the info I found for *${parsed.cabin}*:\n\n${formatted}`);
-        await say(`💬 Suggested reply to guest: "The WiFi password for ${parsed.cabin} is listed here: ${cleanPwd}."`);
+        if (cleanPwd) {
+          await say(`💬 Suggested reply to guest: "The WiFi password for ${parsed.cabin} is listed here: ${cleanPwd}."`);
+        }
       } else {
         await say("🤔 I didn’t find anything in the SOPs for that issue. I’ll try using GPT next.");
       }
@@ -129,8 +135,6 @@ app.message(async ({ message, say }) => {
       console.error('❌ Error saving or searching:', err);
       await say("⚠️ Something went wrong. Let Jake know.");
     }
-
-    return;
   }
 });
 
