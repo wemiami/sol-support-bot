@@ -57,7 +57,12 @@ app.message(async ({ message, say }) => {
       let matchedFile = null;
       let matchText = '';
 
-      const normalize = str => str.toLowerCase().replace(/[\u2018\u2019\u201C\u201D]/g, "'");
+      const normalize = str =>
+  str
+    .toLowerCase()
+    .replace(/[\u2018\u2019\u201C\u201D]/g, "'") // curly quotes → straight
+    .replace(/[–—]/g, '-')                     // en/em dashes → hyphen
+    .replace(/[^\w\s]/g, '');                  // remove punctuation
       const keywords = normalize(parsed.issue).split(/\s+/);
 
       for (const [filename, content] of Object.entries(sopFiles)) {
