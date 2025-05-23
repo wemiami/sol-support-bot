@@ -145,8 +145,7 @@ app.message(async ({ message, say }) => {
         });
 
         const reply = gptResponse.data.choices[0].message.content;
-        await say(`🤖 GPT suggestion:
-${reply}`);
+        await say(`🤖 GPT suggestion:\n${reply}`);
       }
 
     } catch (err) {
@@ -176,3 +175,4 @@ function parseIssueInput(text) {
   await app.start();
   console.log('⚡ Sol is up and running!');
 })();
+
