@@ -3,7 +3,7 @@ require('dotenv').config();
 const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
-const { Configuration, OpenAIApi } = require('openai');
+const OpenAI = require('openai'); // ✅ Correct SDK v4 import
 
 // 🔹 Slack App Setup
 const app = new App({
@@ -13,10 +13,10 @@ const app = new App({
   appToken: process.env.SLACK_APP_TOKEN
 });
 
-// 🔹 OpenAI Setup
-const openai = new OpenAIApi(
-  new Configuration({ apiKey: process.env.OPENAI_API_KEY })
-);
+// 🔹 OpenAI Setup (SDK v4)
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY
+});
 
 // 🔹 Track open conversations
 const openTickets = {};
@@ -136,7 +136,7 @@ app.message(async ({ message, say }) => {
           await say(`💬 Suggested reply to guest: "The WiFi password for ${ticket.cabin} is listed here: ${cleanPwd}."`);
         }
       } else {
-        const gptResponse = await openai.createChatCompletion({
+        const gptResponse = await openai.chat.completions.create({
           model: 'gpt-3.5-turbo',
           messages: [
             { role: 'system', content: 'You are a helpful customer support assistant for a short-term rental company.' },
@@ -144,7 +144,7 @@ app.message(async ({ message, say }) => {
           ]
         });
 
-        const reply = gptResponse.data.choices[0].message.content;
+        const reply = gptResponse.choices[0].message.content;
         await say(`🤖 GPT suggestion:\n${reply}`);
       }
 
@@ -175,4 +175,3 @@ function parseIssueInput(text) {
   await app.start();
   console.log('⚡ Sol is up and running!');
 })();
-
