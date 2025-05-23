@@ -3,6 +3,7 @@ require('dotenv').config();
 const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
+const { Configuration, OpenAIApi } = require('openai');
 
 // 🔹 Slack App Setup
 const app = new App({
@@ -11,6 +12,11 @@ const app = new App({
   socketMode: true,
   appToken: process.env.SLACK_APP_TOKEN
 });
+
+// 🔹 OpenAI Setup
+const openai = new OpenAIApi(
+  new Configuration({ apiKey: process.env.OPENAI_API_KEY })
+);
 
 // 🔹 Track open conversations
 const openTickets = {};
@@ -36,7 +42,6 @@ app.message(async ({ message, say }) => {
   const text = message.text.trim();
   const parsed = parseIssueInput(text);
 
-  // 🧠 If message is already well-formatted (Cabin + Issue), skip prompting
   if (parsed) {
     openTickets[userId] = {
       step: 'submitted',
@@ -45,20 +50,17 @@ app.message(async ({ message, say }) => {
     };
   }
 
-  // 🧱 If no ticket started yet
   if (!openTickets[userId]) {
     openTickets[userId] = { step: 'awaiting_details' };
     await say(`Hi there <@${userId}>! 👋 Please paste the guest's message and tell me which cabin this is for.`);
     return;
   }
 
-  // 🛠 If we’re waiting on details, but they weren’t provided properly
   if (openTickets[userId].step === 'awaiting_details' && !parsed) {
     await say("Hmm... I couldn't understand that. Please format like this:\n\n*Cabin:* Casa Amore\n*Issue:* Guest said fireplace won't turn on.");
     return;
   }
 
-  // ✅ Proceed with submitted issue
   if (openTickets[userId].step === 'submitted') {
     const ticket = openTickets[userId];
 
@@ -72,11 +74,10 @@ app.message(async ({ message, say }) => {
       await say(`📝 Got it. I’ve saved this issue under *${ticket.cabin}* and will check SOPs now...`);
 
       const normalize = str =>
-        str
-          .toLowerCase()
-          .replace(/[‘’“”]/g, "'")
-          .replace(/[–—]/g, '-')
-          .replace(/[^\w\s]/g, '');
+        str.toLowerCase()
+           .replace(/[‘’“”]/g, "'")
+           .replace(/[–—]/g, '-')
+           .replace(/[^\w\s]/g, '');
 
       const keywords = normalize(ticket.issue).split(/\s+/);
       console.log('🔍 Keywords:', keywords);
@@ -135,15 +136,23 @@ app.message(async ({ message, say }) => {
           await say(`💬 Suggested reply to guest: "The WiFi password for ${ticket.cabin} is listed here: ${cleanPwd}."`);
         }
       } else {
-        await say("🤔 I didn’t find anything in the SOPs for that issue. I’ll try using GPT next.");
+        const gptResponse = await openai.createChatCompletion({
+          model: 'gpt-3.5-turbo',
+          messages: [
+            { role: 'system', content: 'You are a helpful customer support assistant for a short-term rental company.' },
+            { role: 'user', content: `A guest at ${ticket.cabin} reported this issue: "${ticket.issue}". No SOPs were found. What would you recommend the customer service rep do or say?` }
+          ]
+        });
+
+        const reply = gptResponse.data.choices[0].message.content;
+        await say(`🤖 GPT suggestion:
+${reply}`);
       }
 
     } catch (err) {
       console.error('❌ Error saving or searching:', err);
       await say("⚠️ Something went wrong. Let Jake know.");
     }
-
-    return;
   }
 });
 
