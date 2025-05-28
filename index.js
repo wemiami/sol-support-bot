@@ -40,13 +40,12 @@ app.message(async ({ message, say }) => {
   const ticket = openTickets[userId] || { step: 'awaiting_details', context: [] };
 
   try {
-    // Check if this is just a greeting
+    // Greeting check
     if (!openTickets[userId] && /^hi\b|^hello\b|^hey\b/i.test(text)) {
       await say("Hey there! What issue can I assist with?");
       return;
     }
 
-    // First message with no ticket
     if (!openTickets[userId]) {
       const gptRes = await openai.chat.completions.create({
         model: 'gpt-4',
@@ -62,9 +61,9 @@ app.message(async ({ message, say }) => {
       ticket.context.push({ role: 'assistant', content: reply });
       ticket.step = 'submitted';
 
-      const cabinMatch = text.match(/cabin[:\-]?\s*(.*)/i);
+      const cabinMatch = text.match(/(?:cabin|at)[:\-]?\s*([a-zA-Z0-9' ]+)/i);
       const issueMatch = text.match(/issue[:\-]?\s*(.*)/i);
-      ticket.cabin = cabinMatch ? cabinMatch[1] : 'Unknown';
+      ticket.cabin = cabinMatch ? cabinMatch[1].trim() : 'Unknown';
       ticket.issue = issueMatch ? issueMatch[1] : text;
 
       openTickets[userId] = ticket;
@@ -77,32 +76,35 @@ app.message(async ({ message, say }) => {
 
       await say(`📝 Got it. I’ve saved this issue under *${ticket.cabin}* and will check SOPs now...`);
 
-      const normalize = str => str.toLowerCase().replace(/[‘’“”]/g, "'").replace(/[–—]/g, '-').replace(/[^\u0000-\u007F]+/g, '').replace(/[^ u007F]+/g, '').replace(/[^\x20-~u007F]+/g, '').replace(/[^\x20-\x7E]+/g, '').replace(/[^\w\s]/g, '');
+      const normalize = str => str.toLowerCase().replace(/[‘’“”]/g, "'").replace(/[–—]/g, '-').replace(/[^\x20-\x7E]+/g, '').replace(/[^\w\s]/g, '');
       const keywords = normalize(ticket.issue).split(/\s+/);
       let matchedFile = null;
       let matchedLines = [];
 
       for (const [filename, content] of Object.entries(sopFiles)) {
-        const normalizedContent = normalize(content);
-        const keywordMatch = keywords.some(word => normalizedContent.includes(word));
-        if (!keywordMatch) continue;
-
         const lines = content.split(/\r?\n/);
-        let cabinRelevant = false;
-        let keywordLines = [];
+        let currentCabin = null;
+        let buffer = [];
+        let isTargetCabin = false;
 
         for (const line of lines) {
-          const normalizedLine = normalize(line);
-          if (normalizedLine.includes(normalize(ticket.cabin))) cabinRelevant = true;
+          const taskMatch = line.match(/task[:\-]?\s*(.*)/i);
+          if (taskMatch) {
+            currentCabin = taskMatch[1].trim();
+            isTargetCabin = normalize(currentCabin).includes(normalize(ticket.cabin));
+            continue;
+          }
 
-          if (keywords.some(word => normalizedLine.includes(word))) {
-            keywordLines.push(line);
+          if (isTargetCabin) {
+            const normalizedLine = normalize(line);
+            const containsKeyword = keywords.some(word => normalizedLine.includes(word));
+            if (containsKeyword) buffer.push(line);
           }
         }
 
-        if (cabinRelevant && keywordLines.length > 0) {
+        if (buffer.length > 0) {
           matchedFile = filename;
-          matchedLines = keywordLines;
+          matchedLines = buffer;
           break;
         }
       }
