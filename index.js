@@ -3,7 +3,7 @@ require('dotenv').config();
 const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
-const OpenAI = require('openai'); // ✅ Correct SDK v4 import
+const OpenAI = require('openai');
 
 // 🔹 Slack App Setup
 const app = new App({
@@ -14,49 +14,41 @@ const app = new App({
 });
 
 // 🔹 OpenAI Setup
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
-});
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-// 🔹 Track open conversations
+// 🔹 Track conversations
 const openTickets = {};
-let sopFiles = {}; // In-memory SOPs
+let sopFiles = {};
 
-// 🔹 Load SOPs from /sops directory on startup
 function loadSOPFiles() {
   const sopsDir = path.join(__dirname, 'sops');
   const files = fs.readdirSync(sopsDir).filter(file => file.endsWith('.txt'));
-
   files.forEach(file => {
     const filePath = path.join(sopsDir, file);
     const content = fs.readFileSync(filePath, 'utf-8');
     sopFiles[file] = content;
   });
-
   console.log(`📁 Loaded ${files.length} SOP files:`, Object.keys(sopFiles));
 }
 
-// 🔹 Slack Message Handler
 app.message(async ({ message, say }) => {
   const userId = message.user;
   const text = message.text.trim();
-
-  // Always try to parse input with GPT
   let parsed;
+
   try {
     const gptRes = await openai.chat.completions.create({
       model: 'gpt-4',
       messages: [
         {
           role: 'system',
-          content: "Extract the 'cabin' and 'issue' from the message. Respond ONLY in JSON like this:\n\n{ \"cabin\": \"Casa Amore\", \"issue\": \"Fireplace won’t turn on\" }"
+          content: "Extract the 'cabin' and 'issue' from the message. Respond ONLY in JSON like this:\n{ \"cabin\": \"Casa Amore\", \"issue\": \"Fireplace won’t turn on\" }"
         },
         { role: 'user', content: text }
       ]
     });
 
     parsed = JSON.parse(gptRes.choices[0].message.content);
-
     if (parsed?.cabin && parsed?.issue) {
       openTickets[userId] = {
         step: 'submitted',
@@ -156,7 +148,7 @@ app.message(async ({ message, say }) => {
           model: 'gpt-4',
           messages: [
             { role: 'system', content: 'You are a helpful, inquisitive customer support assistant for a short-term rental company. Ask follow-up questions and try to guide the CSR toward a resolution.' },
-            { role: 'user', content: `A guest at ${ticket.cabin} reported: "${ticket.issue}". No SOPs were found. Ask the CSR clarifying questions or suggest what they should try first.` }
+            { role: 'user', content: `A guest at ${ticket.cabin} reported: \"${ticket.issue}\". No SOPs were found. Ask the CSR clarifying questions or suggest what they should try first.` }
           ]
         });
 
@@ -171,7 +163,6 @@ app.message(async ({ message, say }) => {
   }
 });
 
-// 🔹 Start Sol
 (async () => {
   loadSOPFiles();
   await app.start();
