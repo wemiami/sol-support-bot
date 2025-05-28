@@ -13,7 +13,7 @@ const app = new App({
   appToken: process.env.SLACK_APP_TOKEN
 });
 
-// 🔹 OpenAI Setup (SDK v4)
+// 🔹 OpenAI Setup
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 });
@@ -40,24 +40,42 @@ function loadSOPFiles() {
 app.message(async ({ message, say }) => {
   const userId = message.user;
   const text = message.text.trim();
-  const parsed = parseIssueInput(text);
 
-  if (parsed) {
-    openTickets[userId] = {
-      step: 'submitted',
-      issue: parsed.issue,
-      cabin: parsed.cabin
-    };
+  // Always try to parse input with GPT
+  let parsed;
+  try {
+    const gptRes = await openai.chat.completions.create({
+      model: 'gpt-4',
+      messages: [
+        {
+          role: 'system',
+          content: "Extract the 'cabin' and 'issue' from the message. Respond ONLY in JSON like this:\n\n{ \"cabin\": \"Casa Amore\", \"issue\": \"Fireplace won’t turn on\" }"
+        },
+        { role: 'user', content: text }
+      ]
+    });
+
+    parsed = JSON.parse(gptRes.choices[0].message.content);
+
+    if (parsed?.cabin && parsed?.issue) {
+      openTickets[userId] = {
+        step: 'submitted',
+        cabin: parsed.cabin,
+        issue: parsed.issue
+      };
+    }
+  } catch (err) {
+    console.log('❌ GPT failed to parse message:', err);
   }
 
   if (!openTickets[userId]) {
     openTickets[userId] = { step: 'awaiting_details' };
-    await say(`Hi there <@${userId}>! 👋 Please paste the guest's message and tell me which cabin this is for.`);
+    await say(`Hi there <@${userId}>! 👋 Please paste the guest's message and let me know which cabin this is for.`);
     return;
   }
 
-  if (openTickets[userId].step === 'awaiting_details' && !parsed) {
-    await say("Hmm... I couldn't understand that. Please format like this:\n\n*Cabin:* Casa Amore\n*Issue:* Guest said fireplace won't turn on.");
+  if (openTickets[userId].step === 'awaiting_details') {
+    await say("Hmm... I couldn’t extract details. Please try something like:\n\n*Cabin:* Casa Amore\n*Issue:* Guest said fireplace won’t turn on.");
     return;
   }
 
@@ -80,8 +98,6 @@ app.message(async ({ message, say }) => {
            .replace(/[^\w\s]/g, '');
 
       const keywords = normalize(ticket.issue).split(/\s+/);
-      console.log('🔍 Keywords:', keywords);
-
       let matchedFile = null;
       let matchedLines = [];
 
@@ -131,21 +147,21 @@ app.message(async ({ message, say }) => {
         const passwordLine = matchedLines.find(l => l.toLowerCase().includes('wifi_password'));
         const cleanPwd = passwordLine ? passwordLine.split(':')[1].trim() : null;
 
-        await say(`📄 From *${matchedFile}*, here's the info I found for *${ticket.cabin}*:\n\n${formatted}`);
+        await say(`📄 From *${matchedFile}*, here’s the info I found for *${ticket.cabin}*:\n\n${formatted}`);
         if (cleanPwd) {
           await say(`💬 Suggested reply to guest: "The WiFi password for ${ticket.cabin} is listed here: ${cleanPwd}."`);
         }
       } else {
         const gptResponse = await openai.chat.completions.create({
-          model: 'gpt-3.5-turbo',
+          model: 'gpt-4',
           messages: [
-            { role: 'system', content: 'You are a helpful customer support assistant for a short-term rental company.' },
-            { role: 'user', content: `A guest at ${ticket.cabin} reported this issue: "${ticket.issue}". No SOPs were found. What would you recommend the customer service rep do or say?` }
+            { role: 'system', content: 'You are a helpful, inquisitive customer support assistant for a short-term rental company. Ask follow-up questions and try to guide the CSR toward a resolution.' },
+            { role: 'user', content: `A guest at ${ticket.cabin} reported: "${ticket.issue}". No SOPs were found. Ask the CSR clarifying questions or suggest what they should try first.` }
           ]
         });
 
         const reply = gptResponse.choices[0].message.content;
-        await say(`🤖 GPT suggestion:\n${reply}`);
+        await say(`🤖 GPT Suggestion:\n${reply}`);
       }
 
     } catch (err) {
@@ -154,20 +170,6 @@ app.message(async ({ message, say }) => {
     }
   }
 });
-
-// 🔹 Extract cabin and issue from Slack message
-function parseIssueInput(text) {
-  const cabinMatch = text.match(/Cabin:\s*(.+)/i);
-  const issueMatch = text.match(/Issue:\s*(.+)/i);
-
-  if (cabinMatch && issueMatch) {
-    return {
-      cabin: cabinMatch[1].trim(),
-      issue: issueMatch[1].trim()
-    };
-  }
-  return null;
-}
 
 // 🔹 Start Sol
 (async () => {
