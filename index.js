@@ -61,8 +61,8 @@ app.message(async ({ message, say }) => {
       ticket.context.push({ role: 'assistant', content: reply });
       ticket.step = 'submitted';
 
-      const cabinMatch = text.match(/(?:cabin|at)[:\-]?\s*([a-zA-Z0-9' ]+)/i);
-      const issueMatch = text.match(/issue[:\-]?\s*(.*)/i);
+      const cabinMatch = text.match(/(?:cabin|at)[:\-\s]*([a-zA-Z0-9' ]+)/i);
+      const issueMatch = text.match(/issue[:\-\s]*(.*)/i);
       ticket.cabin = cabinMatch ? cabinMatch[1].trim() : 'Unknown';
       ticket.issue = issueMatch ? issueMatch[1] : text;
 
@@ -84,11 +84,11 @@ app.message(async ({ message, say }) => {
       for (const [filename, content] of Object.entries(sopFiles)) {
         const lines = content.split(/\r?\n/);
         let currentCabin = null;
-        let buffer = [];
         let isTargetCabin = false;
+        let buffer = [];
 
         for (const line of lines) {
-          const taskMatch = line.match(/task[:\-]?\s*(.*)/i);
+          const taskMatch = line.match(/task[:\-\s]*(.*)/i);
           if (taskMatch) {
             currentCabin = taskMatch[1].trim();
             isTargetCabin = normalize(currentCabin).includes(normalize(ticket.cabin));
