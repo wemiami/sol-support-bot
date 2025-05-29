@@ -84,28 +84,33 @@ app.message(async ({ message, say }) => {
       for (const [filename, content] of Object.entries(sopFiles)) {
         const lines = content.split(/\r?\n/);
         let currentCabin = null;
-        let isTargetCabin = false;
         let buffer = [];
+        let isRelevant = false;
 
         for (const line of lines) {
           const taskMatch = line.match(/task[:\-\s]*(.*)/i);
           if (taskMatch) {
+            if (isRelevant && buffer.length) break; // stop collecting if already found relevant section
             currentCabin = taskMatch[1].trim();
-            isTargetCabin = normalize(currentCabin).includes(normalize(ticket.cabin));
+            buffer = [];
+            isRelevant = normalize(currentCabin) === normalize(ticket.cabin);
             continue;
           }
 
-          if (isTargetCabin) {
-            const normalizedLine = normalize(line);
-            const containsKeyword = keywords.some(word => normalizedLine.includes(word));
-            if (containsKeyword) buffer.push(line);
-          }
+          if (isRelevant) buffer.push(line);
         }
 
-        if (buffer.length > 0) {
-          matchedFile = filename;
-          matchedLines = buffer;
-          break;
+        if (isRelevant && buffer.length) {
+          const matchingLines = buffer.filter(line => {
+            const normalizedLine = normalize(line);
+            return keywords.some(word => normalizedLine.includes(word));
+          });
+
+          if (matchingLines.length > 0) {
+            matchedFile = filename;
+            matchedLines = matchingLines;
+            break;
+          }
         }
       }
 
